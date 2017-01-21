@@ -25,6 +25,8 @@ ACCEL_DATA_CHAR = uuid.UUID('87de0002-51b5-43c3-9ccb-993004dd54aa')
 # Get the BLE provider for the current platform.
 ble = Adafruit_BluefruitLE.get_provider()
 
+socketIO = SocketIO('http://ec2-52-23-209-62.compute-1.amazonaws.com', 5000)
+socketIO.on('start', start)
 
 # Main function implements the program logic so it can run in a background
 # thread.  Most platforms require the main thread to handle GUI events and other
@@ -86,9 +88,8 @@ def main():
     # primitives to send data to other threads.
     def received(data):
         x, y, z = airpen.airpen(data)
-        with SocketIO('localhost', 5000) as socketIO:
-            socketIO.emit('values', x)
-            socketIO.wait(seconds=1)
+        socketIO.emit('values', x)
+        socketIO.wait(seconds=1)
         # with open('bytes.txt', 'a') as txt:
         #     txt.write(str(.getvalue()))
         # print('Received: {0}'.format(data))
@@ -105,11 +106,11 @@ def main():
     # device.disconnect()
 
 
+def start():
+    # Initialize the BLE system.  MUST be called before other BLE calls!
+    ble.initialize()
 
-# Initialize the BLE system.  MUST be called before other BLE calls!
-ble.initialize()
-
-# Start the mainloop to process BLE events, and run the provided function in
-# a background thread.  When the provided main function stops running, returns
-# an integer status code, or throws an error the program will exit.
-ble.run_mainloop_with(main)
+    # Start the mainloop to process BLE events, and run the provided function in
+    # a background thread.  When the provided main function stops running, returns
+    # an integer status code, or throws an error the program will exit.
+    ble.run_mainloop_with(main)
