@@ -7,6 +7,8 @@
 
 
 drv_imu_accel_data_t* calculate_running_avg(drv_imu_accel_data_t * p_accel_data);
-void data_filter_init(void);
+
+
+void data_filter_init(drv_imu_accel_data_t * p_init_accel_data);
 
 #endif //DATA_FILTER__H__

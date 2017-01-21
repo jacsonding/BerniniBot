@@ -510,16 +510,14 @@ void accel_data_timeout_handler(void * p_context)
   ret_code_t err_code;
   drv_imu_accel_data_t accel_data;
 
-//  drv_imu_accel_data_t* p_test_var;
 
 
   err_code = drv_imu_accel_data_read(&accel_data);
   APP_ERROR_CHECK(err_code);
 
-//  p_test_var = calculate_running_avg(&accel_data);
 
-//  err_code = ble_acs_accel_data_notify(&m_acs, (uint8_t*)&p_test_var);
-  err_code = ble_acs_accel_data_notify(&m_acs, (uint8_t*)&accel_data);
+  err_code = ble_acs_accel_data_notify(&m_acs, (uint8_t*)calculate_running_avg(&accel_data));
+//  err_code = ble_acs_accel_data_notify(&m_acs, (uint8_t*)&accel_data);
 
   APP_ERROR_CHECK(err_code);
 
@@ -544,24 +542,28 @@ int main(void)
   	drv_imu_init_t imu_init = { .p_twi_instance = &m_twi_sensors };
   	err_code = drv_imu_init(&imu_init);
 
-  	data_filter_init();
+    drv_imu_accel_data_t init_accel_data[MOVING_AVG_SIZE];
 
-//	drv_imu_accel_data_t accel_data;
-//
-//	drv_imu_accel_data_t* p_test_var;
-//
-//
-//
-//  	for(uint8_t x = 0; x < 10; x++)
-//  	{
-//  	  err_code = drv_imu_accel_data_read(&accel_data);
-//  	  APP_ERROR_CHECK(err_code);
-//
-//  	  p_test_var = calculate_running_avg(&accel_data);
-//
-//  	}
+    for (uint8_t init_index = 0; init_index < MOVING_AVG_SIZE; init_index++)
+    {
+      err_code = drv_imu_accel_data_read(&(init_accel_data[init_index]));
+      APP_ERROR_CHECK(err_code);
+    }
 
+  	data_filter_init(init_accel_data);
 
+//  	drv_imu_accel_data_t accel_data;
+//
+//  	drv_imu_accel_data_t* p_test_var;
+//
+//   	for(uint8_t x = 0; x < 3; x++)
+//   	{
+//   	  err_code = drv_imu_accel_data_read(&accel_data);
+//   	  APP_ERROR_CHECK(err_code);
+//
+//   	  p_test_var = calculate_running_avg(&accel_data);
+//   	  p_test_var = p_test_var;
+//   	}
 
   	APP_ERROR_CHECK(err_code);
     // Initialize.

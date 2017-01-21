@@ -25,11 +25,11 @@ static void update_moving_average(drv_imu_accel_data_t * p_accel_data) {
   p_current_accel_data[MOVING_AVG_SIZE-1] = p_accel_data;
 }
 
-void data_filter_init(void)
+void data_filter_init(drv_imu_accel_data_t * p_init_accel_data)
 {
 	for(uint8_t x = 0; x < MOVING_AVG_SIZE; x++)
 	{
-		p_current_accel_data[x] = &zero;
+		p_current_accel_data[x] = p_init_accel_data+x;
 	}
 }
 
