@@ -13,7 +13,7 @@
 		<script>
 			// fake data
 			var fakeData = [[-10, 0, 0],[0,12,0]];
-			var lastPoint = [0,0,0];
+			var lastPoint = [0,12,0];
 
 			// scene and camera and render
 			var scene = new THREE.Scene();
@@ -25,20 +25,13 @@
 			camera.position.set(0,0,10);
 			camera.lookAt(new THREE.Vector3(0,0,0));
 
-			// geometry
-			var geometry = new THREE.BoxGeometry( 1, 1, 1 );
-			var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-			var cube = new THREE.Mesh( geometry, material );
-			scene.add( cube );
-
-			// camera.position.z = 3;
-
 			// fake data geometry
 			var materialLine = new THREE.LineBasicMaterial({ color: 0x0000ff });
 
 			var geometryLine = new THREE.Geometry();
 			geometryLine.vertices.push(new THREE.Vector3(fakeData[0][0],fakeData[0][1],fakeData[0][2]));
 			geometryLine.vertices.push(new THREE.Vector3(fakeData[1][0],fakeData[1][1],fakeData[1][2]));
+
 
 
 			var line = new THREE.Line(geometryLine, materialLine);
@@ -49,14 +42,18 @@
 			function render() {
 			requestAnimationFrame( render );
 				renderer.render( scene, camera );
-				cube.rotation.x += 0.1;
-				// cube.rotation.y += 0.1;
 			}
 			render();
 
-			function addPaintPoint(point){
-				geometryLine.vertices.push(new THREE.Vector(point[0],point[1],point[2])
+			var geometryLine2;
 
+			function addPaintPoint(point){
+				// geometryLine.vertices.push(new THREE.Vector(point[0],point[1],point[2])
+				geometryLine2 = new THREE.Geometry();
+				geometryLine2.vertices.push(new THREE.Vector3(lastPoint[0],lastPoint[1],lastPoint[2]));
+				geometryLine2.vertices.push(new THREE.Vector3(point[0],point[1],point[2]));
+				var line2 = new THREE.Line(geometryLine2,materialLine);
+				scene.add(line2);
 			}
 
 		</script>
