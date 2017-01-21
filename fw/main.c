@@ -32,7 +32,6 @@
 #include "softdevice_handler.h"
 #include "app_timer.h"
 #include "app_button.h"
-#include "ble_nts.h"
 #include "app_uart.h"
 #include "app_util_platform.h"
 #include "bsp.h"
@@ -42,6 +41,7 @@
 #include "nrf_drv_twi.h"
 #include "drv_imu.h"
 #include "sdk_config.h"
+#include "ble_acs.h"
 
 #define IS_SRVC_CHANGED_CHARACT_PRESENT 0                                           /**< Include the service_changed characteristic. If not enabled, the server's database cannot be changed for the lifetime of the device. */
 
@@ -76,11 +76,15 @@
 #define LED_GREEN                       (23)
 #define LED_BLUE                        (24)
 
-static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;    /**< Handle of the current connection. */
-static ble_nts_t                        m_nts;
-static bool                             m_is_status_subscribed;
+#define ACCEL_DATA_TIMER_MS             APP_TIMER_TICKS(20, APP_TIMER_PRESCALER)
 
-APP_TIMER_DEF(m_coffee_timer_id);
+static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;    /**< Handle of the current connection. */
+static ble_acs_t                        m_acs;
+static bool                             m_is_data_subscribed;
+
+
+
+APP_TIMER_DEF(m_accel_data_timer_id);
 
 void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
 {
@@ -116,89 +120,31 @@ static void gap_params_init(void)
     APP_ERROR_CHECK(err_code);
 }
 
-static void confirm_write_handler(ble_nts_t * p_nts, bool confirm)
+static void data_subscr_handler(ble_acs_t * p_acs, bool is_data_subscribed)
 {
-
-  ret_code_t err_code;
-
-  uint8_t            current_status;
-  ble_gatts_value_t   value = {.len = sizeof(uint8_t), .offset = 0, .p_value = (uint8_t*)(&current_status)};
-  err_code = sd_ble_gatts_value_get(m_conn_handle,
-                                    m_nts.status_char_handles.value_handle,
-                                    &value);
-
-  if(confirm && current_status == 0)
-  {
-    nrf_gpio_pin_set(LED_GREEN);
-    nrf_gpio_pin_clear(LED_YELLOW);
-
-    err_code = app_timer_start(m_coffee_timer_id, APP_TIMER_TICKS(6000, APP_TIMER_PRESCALER), NULL);
-    APP_ERROR_CHECK(err_code);
-
-    uint8_t status = 1; //busy
-    if(m_is_status_subscribed)
-    {
-      err_code = ble_nts_status_notify(&m_nts, &status);
-      APP_ERROR_CHECK(err_code);
-    }
-  }
+    m_is_data_subscribed = is_data_subscribed;
+    app_timer_start(m_accel_data_timer_id, ACCEL_DATA_TIMER_MS, NULL);
+    //TODO: send 1 packet first
 }
 
-static void type_write_handler(ble_nts_t * p_nts, uint8_t type)
-{
-    switch (type) {
-      case 0:
-        //Onboard LEDs are inverted polarity
-        nrf_gpio_pin_clear(LED_2);
-        nrf_gpio_pin_set(LED_3);
-        nrf_gpio_pin_set(LED_4);
-        break;
-      case 1:
-        nrf_gpio_pin_clear(LED_3);
-        nrf_gpio_pin_set(LED_2);
-        nrf_gpio_pin_set(LED_4);
-        break;
-      case 2:
-        nrf_gpio_pin_clear(LED_4);
-        nrf_gpio_pin_set(LED_3);
-        nrf_gpio_pin_set(LED_2);
-        break;
-    }
-}
-
-static void status_subscr_handler(ble_nts_t * p_nts, bool status_subscr)
-{
-    m_is_status_subscribed = status_subscr;
-}
-
-static void queue_subscr_handler(ble_nts_t * p_nts, bool status_subscr)
-{
-//don't need anything for demo
-}
 
 /**@brief Function for initializing services that will be used by the application.
  */
 static void services_init(void)
 {
     uint32_t       err_code;
-    ble_nts_init_t nts_init;
+    ble_acs_init_t acs_init;
 
-    memset(&nts_init, 0, sizeof(nts_init));
-    nts_init.type_write_handler = type_write_handler;
-    nts_init.confirm_write_handler = confirm_write_handler;
-    nts_init.status_subscr_handler = status_subscr_handler;
-    nts_init.queue_subscr_handler = queue_subscr_handler;
-    nts_init.current_status = 0;
-    nts_init.current_queue_index = 2;
+    memset(&acs_init, 0, sizeof(acs_init));
+    acs_init.data_subscr_handler = data_subscr_handler;
 
-    err_code = ble_nts_init(&m_nts, &nts_init);
+    err_code = ble_acs_init(&m_acs, &acs_init);
     APP_ERROR_CHECK(err_code);
 }
 
-
 /**@brief Function for handling an event from the Connection Parameters Module.
  *
- * @details This function will be called for all events in the Connection Parameters Module
+ * @details This function will be called for all eveacs in the Connection Parameters Module
  *          which are passed to the application.
  *
  * @note All this function does is to disconnect. This could have been done by simply setting
@@ -271,9 +217,9 @@ static void sleep_mode_enter(void)
 }
 
 
-/**@brief Function for handling advertising events.
+/**@brief Function for handling advertising eveacs.
  *
- * @details This function will be called for advertising events which are passed to the application.
+ * @details This function will be called for advertising eveacs which are passed to the application.
  *
  * @param[in] ble_adv_evt  Advertising event.
  */
@@ -315,7 +261,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
         case BLE_GAP_EVT_DISCONNECTED:
             err_code = bsp_indication_set(BSP_INDICATE_IDLE);
             APP_ERROR_CHECK(err_code);
-            app_timer_stop(m_coffee_timer_id);
+            app_timer_stop(m_accel_data_timer_id);
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
             //TODO: figure out timer when disconnected
             break; // BLE_GAP_EVT_DISCONNECTED
@@ -407,7 +353,7 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 {
     ble_conn_params_on_ble_evt(p_ble_evt);
     on_ble_evt(p_ble_evt);
-    ble_nts_on_ble_evt(&m_nts, p_ble_evt);
+    ble_acs_on_ble_evt(&m_acs, p_ble_evt);
     ble_advertising_on_ble_evt(p_ble_evt);
     bsp_btn_ble_on_ble_evt(p_ble_evt);
 
@@ -443,13 +389,13 @@ static void ble_stack_init(void)
     err_code = softdevice_enable(&ble_enable_params);
     APP_ERROR_CHECK(err_code);
 
-    // Subscribe for BLE events.
+    // Subscribe for BLE eveacs.
     err_code = softdevice_ble_evt_handler_set(ble_evt_dispatch);
     APP_ERROR_CHECK(err_code);
 }
 
 
-/**@brief Function for handling events from the BSP module.
+/**@brief Function for handling eveacs from the BSP module.
  *
  * @param[in]   event   Event generated by button press.
  */
@@ -481,12 +427,7 @@ void bsp_event_handler(bsp_event_t event)
             }
             break;
         case BSP_EVENT_KEY_0: //On Button 1 press
-            nrf_gpio_pin_set(LED_YELLOW);
-            nrf_gpio_pin_clear(LED_BLUE);
-
-            uint8_t status = 0;
-            err_code = ble_nts_status_notify(&m_nts, &status);
-            APP_ERROR_CHECK(err_code);
+        	//Activate data transfer
 
             break;
         default:
@@ -503,7 +444,7 @@ static void advertising_init(void)
     ble_advdata_t          scanrsp;
     ble_adv_modes_config_t options;
 
-    ble_uuid_t             m_adv_uuids[] = {{NTS_UUID_SERVICE, m_nts.uuid_type}};  /**< Universally unique service identifier. */
+    ble_uuid_t             m_adv_uuids[] = {{ACS_UUID_SERVICE, m_acs.uuid_type}};  /**< Universally unique service identifier. */
 
     // Build advertising data struct to pass into @ref ble_advertising_init.
     memset(&advdata, 0, sizeof(advdata));
@@ -545,7 +486,7 @@ static void buttons_leds_init(bool * p_erase_bonds)
 }
 
 
-/**@brief Function for placing the application in low power state while waiting for events.
+/**@brief Function for placing the application in low power state while waiting for eveacs.
  */
 static void power_manage(void)
 {
@@ -561,23 +502,24 @@ static void ext_led_init(void)
   nrf_gpio_pin_set(LED_YELLOW);
 }
 
-void coffee_timeout_handler(void * p_context)
+void accel_data_timeout_handler(void * p_context)
 {
-  ret_code_t          err_code;
+  ret_code_t err_code;
+  drv_imu_accel_data_t accel_data;
 
-  uint8_t status = 2; //free
-  err_code = ble_nts_status_notify(&m_nts, &status);
+  err_code = drv_imu_accel_data_read(&accel_data);
   APP_ERROR_CHECK(err_code);
 
-  nrf_gpio_pin_set(LED_BLUE);
-  nrf_gpio_pin_clear(LED_GREEN);
+  err_code = ble_acs_accel_data_notify(&m_acs, (uint8_t*)&accel_data);
+  APP_ERROR_CHECK(err_code);
+
 }
 
 static void timer_init(void)
 {
   uint32_t err_code;
   APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, false);
-  err_code = app_timer_create(&m_coffee_timer_id, APP_TIMER_MODE_SINGLE_SHOT, coffee_timeout_handler);
+  err_code = app_timer_create(&m_accel_data_timer_id, APP_TIMER_MODE_REPEATED, accel_data_timeout_handler);
   APP_ERROR_CHECK(err_code);
 }
 /**@brief Application main function.
@@ -589,17 +531,9 @@ int main(void)
 
 	  static const  nrf_drv_twi_t m_twi_sensors = NRF_DRV_TWI_INSTANCE(0);
 
-    drv_imu_accel_data_t accel_data;
-
   	drv_imu_init_t imu_init = { .p_twi_instance = &m_twi_sensors };
   	err_code = drv_imu_init(&imu_init);
   	APP_ERROR_CHECK(err_code);
-
-    err_code = drv_imu_accel_data_read(&accel_data);
-    APP_ERROR_CHECK(err_code);
-
-
-
     // Initialize.
     APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, false);
 

@@ -28,7 +28,7 @@ SRC_FILES += \
   $(PROJ_DIR)/bsp/bsp.c \
   $(PROJ_DIR)/bsp/bsp_btn_ble.c \
 	$(PROJ_DIR)/main.c \
-  $(PROJ_DIR)/src/ble_nts.c \
+  $(PROJ_DIR)/src/ble_acs.c \
   $(PROJ_DIR)/src/drv_imu.c \
   $(SDK_ROOT)/components/ble/common/ble_advdata.c \
   $(SDK_ROOT)/components/ble/ble_advertising/ble_advertising.c \

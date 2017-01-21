@@ -153,6 +153,7 @@ ret_code_t drv_imu_accel_data_read(drv_imu_accel_data_t * p_accel_data)
   p_accel_data->x = (int16_t)(((x_high << 8) | x_low)) >> 4;
   p_accel_data->y = (int16_t)(((y_high << 8) | y_low)) >> 4;
   p_accel_data->z = (int16_t)(((z_high << 8) | z_low)) >> 4;
+  //WHY RIGHT SHIFT BY 4?????
 
   return NRF_SUCCESS;
 }
