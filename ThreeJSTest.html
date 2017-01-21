@@ -75,33 +75,33 @@
 
 	}
 
-	// update positions
-	// function updatePositions() {
-	//
-	// 	var positions = line.geometry.attributes.position.array;
-	//
-	// 	var x = y = z = index = 0;
-	//
-	// 	for ( var i = 0, l = MAX_POINTS; i < l; i ++ ) {
-	//
-	// 		positions[ index ++ ] = x;
-	// 		positions[ index ++ ] = y;
-	// 		positions[ index ++ ] = z;
-	//
-	// 		x += ( Math.random() - 0.5 ) * 30;
-	// 		y += ( Math.random() - 0.5 ) * 30;
-	// 		z += ( Math.random() - 0.5 ) * 30;
-	//
-	// 	}
-	//
-	// }
 
-	function updatePositions(point) {
+	function updatePositions() {
+
 		var positions = line.geometry.attributes.position.array;
-		positions[ index ++ ] = point[0];
-		positions[ index ++ ] = point[1];
-		positions[ index ++ ] = point[2];
+
+		var x = y = z = index = 0;
+
+		for ( var i = 0, l = MAX_POINTS; i < l; i ++ ) {
+
+			positions[ index ++ ] = x;
+			positions[ index ++ ] = y;
+			positions[ index ++ ] = z;
+
+			x += 1;
+			y += 1;
+			z += 1;
+
+		}
+		
 	}
+
+	// function updatePositions(point) {
+	// 	var positions = line.geometry.attributes.position.array;
+	// 	positions[ index ++ ] = point[0];
+	// 	positions[ index ++ ] = point[1];
+	// 	positions[ index ++ ] = point[2];
+	// }
 
 	// render
 	function render() {
