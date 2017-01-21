@@ -4,9 +4,6 @@ import logging
 import time
 import uuid
 import airpen
-import Adafruit_BluefruitLE
-from subprocess import call
-
 
 
 app = Flask(__name__, static_url_path='')
@@ -16,9 +13,6 @@ celery_thread = None
 
 ACCEL_SERVICE_UUID = uuid.UUID('87de0001-51b5-43c3-9ccb-993004dd54aa')
 ACCEL_DATA_CHAR = uuid.UUID('87de0002-51b5-43c3-9ccb-993004dd54aa')
-
-ble = Adafruit_BluefruitLE.get_provider()
-
 
 # def main():
 # 	print 'started...'
@@ -83,7 +77,7 @@ def jsfile(path):
 def requestBluetooth(shouldStart):
 	if shouldStart:
 		print 'Drawing Started'
-		call(["python", "Adafruit_Python_BluefruitLE/examples/low_level.py"])
+		emit('start')
 		print 'running...'
 	else:
 		print 'Drawing Stopped'
