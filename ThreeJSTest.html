@@ -25,7 +25,12 @@
 			camera.position.set(0,0,10);
 			camera.lookAt(new THREE.Vector3(0,0,0));
 
-			// fake data geometry
+			// setup geometry
+			var materialList = [];
+			var geometryList = [];
+			var lineList = [];
+
+
 			var materialLine = new THREE.LineBasicMaterial({ color: 0x0000ff });
 
 			var geometryLine = new THREE.Geometry();
@@ -45,15 +50,23 @@
 			}
 			render();
 
-			var geometryLine2;
+
 
 			function addPaintPoint(point){
-				// geometryLine.vertices.push(new THREE.Vector(point[0],point[1],point[2])
-				geometryLine2 = new THREE.Geometry();
-				geometryLine2.vertices.push(new THREE.Vector3(lastPoint[0],lastPoint[1],lastPoint[2]));
-				geometryLine2.vertices.push(new THREE.Vector3(point[0],point[1],point[2]));
-				var line2 = new THREE.Line(geometryLine2,materialLine);
-				scene.add(line2);
+				//push new material and geometry
+				materialList.push(new THREE.LineBasicMaterial({ color: 0xfdfdfd }));
+				geometryList.push(new THREE.Geometry());
+
+				//add vertices to new geometry
+				geometryList[geometryList.length-1].vertices.push(new THREE.Vector3(lastPoint[0],lastPoint[1],lastPoint[2]));
+				geometryList[geometryList.length-1].vertices.push(new THREE.Vector3(point[0],point[1],point[2]));
+
+				//set lastPoint
+				lastPoint=point;
+
+				//add new line with new geometry and material to line list and scene
+				lineList.push(new THREE.Line(geometryList[geometryList.length-1],materialList[materialList.length-1]));
+				scene.add(lineList[lineList.length-1]);
 			}
 
 		</script>
