@@ -27,9 +27,10 @@ SRC_FILES += \
   $(SDK_ROOT)/components/drivers_nrf/uart/nrf_drv_uart.c \
   $(PROJ_DIR)/bsp/bsp.c \
   $(PROJ_DIR)/bsp/bsp_btn_ble.c \
-	$(PROJ_DIR)/main.c \
+  $(PROJ_DIR)/main.c \
   $(PROJ_DIR)/src/ble_acs.c \
   $(PROJ_DIR)/src/drv_imu.c \
+  $(PROJ_DIR)/src/data_filter.c \
   $(SDK_ROOT)/components/ble/common/ble_advdata.c \
   $(SDK_ROOT)/components/ble/ble_advertising/ble_advertising.c \
   $(SDK_ROOT)/components/ble/common/ble_conn_params.c \

@@ -42,6 +42,7 @@
 #include "drv_imu.h"
 #include "sdk_config.h"
 #include "ble_acs.h"
+#include "data_filter.h"
 
 #define IS_SRVC_CHANGED_CHARACT_PRESENT 0                                           /**< Include the service_changed characteristic. If not enabled, the server's database cannot be changed for the lifetime of the device. */
 
@@ -76,11 +77,13 @@
 #define LED_GREEN                       (23)
 #define LED_BLUE                        (24)
 
-#define ACCEL_DATA_TIMER_MS             APP_TIMER_TICKS(20, APP_TIMER_PRESCALER)
+#define ACCEL_DATA_TIMER_MS             APP_TIMER_TICKS(50, APP_TIMER_PRESCALER)
 
 static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;    /**< Handle of the current connection. */
 static ble_acs_t                        m_acs;
 static bool                             m_is_data_subscribed;
+
+
 
 
 
@@ -507,10 +510,17 @@ void accel_data_timeout_handler(void * p_context)
   ret_code_t err_code;
   drv_imu_accel_data_t accel_data;
 
+//  drv_imu_accel_data_t* p_test_var;
+
+
   err_code = drv_imu_accel_data_read(&accel_data);
   APP_ERROR_CHECK(err_code);
 
+//  p_test_var = calculate_running_avg(&accel_data);
+
+//  err_code = ble_acs_accel_data_notify(&m_acs, (uint8_t*)&p_test_var);
   err_code = ble_acs_accel_data_notify(&m_acs, (uint8_t*)&accel_data);
+
   APP_ERROR_CHECK(err_code);
 
 }
@@ -533,6 +543,26 @@ int main(void)
 
   	drv_imu_init_t imu_init = { .p_twi_instance = &m_twi_sensors };
   	err_code = drv_imu_init(&imu_init);
+
+  	data_filter_init();
+
+//	drv_imu_accel_data_t accel_data;
+//
+//	drv_imu_accel_data_t* p_test_var;
+//
+//
+//
+//  	for(uint8_t x = 0; x < 10; x++)
+//  	{
+//  	  err_code = drv_imu_accel_data_read(&accel_data);
+//  	  APP_ERROR_CHECK(err_code);
+//
+//  	  p_test_var = calculate_running_avg(&accel_data);
+//
+//  	}
+
+
+
   	APP_ERROR_CHECK(err_code);
     // Initialize.
     APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, false);
