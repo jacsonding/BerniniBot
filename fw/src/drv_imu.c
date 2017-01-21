@@ -121,8 +121,38 @@ ret_code_t drv_imu_init(drv_imu_init_t * p_params)
     }
 }
 
-ret_code_t drv_imu_accel_data_read( drv_imu_accel_data_t * p_accel_data)
+ret_code_t drv_imu_accel_data_read(drv_imu_accel_data_t * p_accel_data)
 {
   //Stuff goes here
+  uint8_t x_low;
+  uint8_t x_high;
+  uint8_t y_low;
+  uint8_t y_high;
+  uint8_t z_low;
+  uint8_t z_high;
+  ret_code_t err_code;
+
+ // Read from the x accel registers
+  err_code = reg_read(LSM303_REGISTER_ACCEL_OUT_X_L_A, &x_low);
+  RETURN_IF_ERROR(err_code);
+  err_code = reg_read(LSM303_REGISTER_ACCEL_OUT_X_H_A, &x_high);
+  RETURN_IF_ERROR(err_code);
+
+// Read from the y accel registers
+  err_code = reg_read(LSM303_REGISTER_ACCEL_OUT_Y_L_A, &y_low);
+  RETURN_IF_ERROR(err_code);
+  err_code = reg_read(LSM303_REGISTER_ACCEL_OUT_Y_H_A, &y_high);
+  RETURN_IF_ERROR(err_code);
+
+  // Read from the z accel registers
+  err_code = reg_read(LSM303_REGISTER_ACCEL_OUT_Z_L_A, &z_low);
+  RETURN_IF_ERROR(err_code);
+  err_code = reg_read(LSM303_REGISTER_ACCEL_OUT_Z_H_A, &z_high);
+  RETURN_IF_ERROR(err_code);
+
+  p_accel_data->x = (int16_t)(((x_high << 8) | x_low)) >> 4;
+  p_accel_data->y = (int16_t)(((y_high << 8) | y_low)) >> 4;
+  p_accel_data->z = (int16_t)(((z_high << 8) | z_low)) >> 4;
+
   return NRF_SUCCESS;
 }

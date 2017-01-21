@@ -584,14 +584,21 @@ static void timer_init(void)
  */
 int main(void)
 {
-	  uint32_t err_code;
+  	uint32_t err_code;
     bool erase_bonds;
 
-	static const  nrf_drv_twi_t m_twi_sensors = NRF_DRV_TWI_INSTANCE(0);
+	  static const  nrf_drv_twi_t m_twi_sensors = NRF_DRV_TWI_INSTANCE(0);
 
-	drv_imu_init_t imu_init = { .p_twi_instance = &m_twi_sensors };
-	err_code = drv_imu_init(&imu_init);
-	APP_ERROR_CHECK(err_code);
+    drv_imu_accel_data_t accel_data;
+
+  	drv_imu_init_t imu_init = { .p_twi_instance = &m_twi_sensors };
+  	err_code = drv_imu_init(&imu_init);
+  	APP_ERROR_CHECK(err_code);
+
+    err_code = drv_imu_accel_data_read(&accel_data);
+    APP_ERROR_CHECK(err_code);
+
+
 
     // Initialize.
     APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, false);

@@ -63,6 +63,6 @@ typedef struct
 
 ret_code_t drv_imu_init(drv_imu_init_t * p_params);
 
-ret_code_t drv_imu_accel_data_get(drv_imu_accel_data_t * p_accel_data);
+ret_code_t drv_imu_accel_data_read(drv_imu_accel_data_t * p_accel_data);
 
 #endif //__DRV_IMU_H__
