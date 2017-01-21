@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Airpen - 3D Sculpting AI</title>
+		<script type="text/javascript" src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+		<script type="text/javascript" charset="utf-8">
+    			var socket = io.connect('http://' + document.domain + ':' + location.port);
+    			// socket.on('connect', function() {
+                // socket.emit('bluetooth', {data: 'request bluetooth'});
+    			// });
+
+				socket.on('values', function(values) {
+                	console.log(values);
+    			});
+
+    			function startDrawing() {
+    				socket.emit('shouldStart', true);
+    			}
+		</script>
+	</head>
+
+	<body>
+		<button onclick="startDrawing()">Start Drawing</button>
+	</body>
+</html>
