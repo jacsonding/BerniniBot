@@ -77,13 +77,16 @@ def integrate_accel_pos(accel_buffer):
 #convert to m/s^2
 def convert_accel_to_std_units(accel_raw):
     v = vec_multiply(vec_multiply(accel_raw, [0.001, 0.001, 0.001]), [9.8, 9.8, 9.8])
+    v = correct_gravity(v)
     # print v
     return v
 
 
 def correct_gravity(accel_std):
     a = [0, 0, 9.8]
-    return vec_subtract(accel_raw, a)
+    v = vec_subtract(accel_std, a)
+    print v
+    return v
 
 
 # class Namespace(BaseNamespace):
