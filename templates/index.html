@@ -7,6 +7,72 @@
 			body { margin: 0; }
 			canvas { width: 100%; height: 100% }
 		</style>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+		<script type="text/javascript" charset="utf-8">
+			var color = "0xffffff";
+
+			$( document ).ready(function() {
+				getshit();
+			});
+
+
+			function getshit(){
+				setInterval(function(){ 
+
+					$.ajax({
+	   					url: 'http://localhost/data.json',
+	   					cache: false,
+						success: function(data) {
+							// console.log(data);
+							var x = data.x;
+							var y = data.y;
+							var z = data.z;
+
+							addPaintPoint([x, y, z]);
+
+						},
+						type: 'GET'
+					});
+
+				 }, 100);
+					
+			}
+
+
+			function getothershit(){
+				setInterval(function(){ 
+
+					$.ajax({
+	   					url: 'http://localhost/btn.json',
+	   					cache: false,
+						success: function(data) {
+							// console.log(data);
+							var btn_id = data.id;
+							var state = data.state;
+
+							if(state == "1"){
+								if(btn_id == "1"){
+									color = "0xff0000"; 
+								} else if(btn_id == "2") {
+									color = "0x00ff00";
+								} else if(btn_id == "3") {
+									color = "0x0000ff";
+								} else {
+									color = "0xffffff";
+								}
+							} else {
+								color = "0xffffff";
+							}
+
+						},
+						type: 'GET'
+					});
+
+				 }, 100);
+					
+			}
+
+		</script>
 	</head>
 	<body>
 		<script src="js/three.js"></script>
