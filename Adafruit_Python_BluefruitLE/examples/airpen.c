@@ -36,7 +36,7 @@ static PyObject* airpen(PyObject* self, PyObject *args)
   {
       memcpy(&btn_state_buff, p_data, 1);
 
-      btn_id = (btn_state_buff << 1) >> 1;
+      btn_id = btn_state_buff & 0x7F;
       state = (btn_state_buff >> 7);
 
       return Py_BuildValue("ii", btn_id, state);

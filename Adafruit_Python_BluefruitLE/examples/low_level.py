@@ -118,6 +118,7 @@ def main():
         btn_id, state = airpen.airpen(data)
         with open('../../static/btn.json', 'w') as some_file:
             some_file.write('{"id":"'+str(btn_id)+'", "state":"'+str(state)+'"}')
+        # print '{"id":"'+str(btn_id)+'", "state":"'+str(state)+'"}'
 
     # Turn on notification of ACCEL characteristics using the callback above.
     print('Subscribing to ACCEL characteristic changes...')
