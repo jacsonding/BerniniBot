@@ -1,35 +1,42 @@
+import socketio
+import eventlet
 from flask import Flask, render_template, url_for, send_from_directory
-from flask_socketio import SocketIO, emit
-import logging
-import time
-import uuid
 import airpen
+from subprocess import call
 
-
+sio = socketio.Server()
 app = Flask(__name__, static_url_path='')
-app.config['SECRET_KEY'] = 'airpen'
-socketio = SocketIO(app)
-
 
 @app.route('/')
 def index():
-	return render_template('index.html')
-
+    return render_template('index.html')
 
 @app.route('/<path:path>')
 def jsfile(path):
     return url_for('static', filename=path)
 
+@sio.on('connect')
+def connect(sid, environ):
+    print('connect ', sid)
 
-@socketio.on('shouldStart')
-def requestBluetooth(shouldStart):
+@sio.on('my message')
+def message(sid, data):
+    print('message ', data)
+
+@sio.on('disconnect')
+def disconnect(sid):
+    print('disconnect ', sid)
+
+@sio.on('shouldStart')
+def shouldStart(sid, shouldStart):
 	if shouldStart:
-		print 'Drawing Started'
-		emit('start')
-		print 'running...'
+		print 'starting'
+		call(["python", "Adafruit_Python_BluefruitLE/examples/low_level.py"])
 	else:
-		print 'Drawing Stopped'
-
+		print 'disconnected'
 
 if __name__ == '__main__':
-    socketio.run(app)
+    # wrap Flask application with socketio's middleware
+    app = socketio.Middleware(sio, app)
+    # deploy as an eventlet WSGI server
+    eventlet.wsgi.server(eventlet.listen(('', 80)), app)

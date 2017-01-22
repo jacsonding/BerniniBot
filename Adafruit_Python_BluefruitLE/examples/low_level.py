@@ -5,6 +5,9 @@
 # example that uses a high level service implementation.
 # Author: Tony DiCola
 import logging
+# logging.getLogger('requests').setLevel(logging.WARNING)
+# logging.basicConfig(level=logging.DEBUG)
+
 import time
 import uuid
 
@@ -25,8 +28,14 @@ ACCEL_DATA_CHAR = uuid.UUID('87de0002-51b5-43c3-9ccb-993004dd54aa')
 # Get the BLE provider for the current platform.
 ble = Adafruit_BluefruitLE.get_provider()
 
-socketIO = SocketIO('http://ec2-52-23-209-62.compute-1.amazonaws.com', 5000)
-socketIO.on('start', start)
+
+
+# class Namespace(BaseNamespace):
+
+#     def on_aaa_response(self, *args):
+#         print('on_aaa_response', args)
+#         self.emit('bbb')
+
 
 # Main function implements the program logic so it can run in a background
 # thread.  Most platforms require the main thread to handle GUI events and other
@@ -34,6 +43,7 @@ socketIO.on('start', start)
 # of automatically though and you just need to provide a main function that uses
 # the BLE provider.
 def main():
+    print 'started...'
     # Clear any cached data because both bluez and CoreBluetooth have issues with
     # caching data and it going stale.
     ble.clear_cached_data()
@@ -87,9 +97,17 @@ def main():
     # the function changes is thread safe.  Use Queue or other thread-safe
     # primitives to send data to other threads.
     def received(data):
-        x, y, z = airpen.airpen(data)
-        socketIO.emit('values', x)
-        socketIO.wait(seconds=1)
+        values = airpen.airpen(data)
+        print values
+        with open('../../static/data.txt', 'w') as some_file:
+            some_file.write(str(values))
+
+        # with SocketIO('localhost', 80, LoggingNamespace) as socketIO:
+        #     print 'socket instance'
+        #     # ss = socketIO.define(Namespace, '/')
+        #     # print 'ss instance'
+        #     socketIO.emit('values', x)
+        
         # with open('bytes.txt', 'a') as txt:
         #     txt.write(str(.getvalue()))
         # print('Received: {0}'.format(data))
@@ -106,11 +124,11 @@ def main():
     # device.disconnect()
 
 
-def start():
-    # Initialize the BLE system.  MUST be called before other BLE calls!
-    ble.initialize()
+# Initialize the BLE system.  MUST be called before other BLE calls!
+ble.initialize()
 
-    # Start the mainloop to process BLE events, and run the provided function in
-    # a background thread.  When the provided main function stops running, returns
-    # an integer status code, or throws an error the program will exit.
-    ble.run_mainloop_with(main)
+# Start the mainloop to process BLE events, and run the provided function in
+# a background thread.  When the provided main function stops running, returns
+# an integer status code, or throws an error the program will exit.
+ble.run_mainloop_with(main)
+
