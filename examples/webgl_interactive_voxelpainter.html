@@ -74,6 +74,10 @@
 				rollOverMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, opacity: 0.5, transparent: true } );
 				rollOverMesh = new THREE.Mesh( rollOverGeo, rollOverMaterial ); //triangular polygon mesh based objects
 				scene.add( rollOverMesh );
+				// set initial rollOverMesh position
+				rollOverMesh.position.setX(25);
+				rollOverMesh.position.setY(25);
+				rollOverMesh.position.setZ(25);
 
 				// cube size and texture
 
@@ -129,8 +133,8 @@
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				container.appendChild( renderer.domElement );
 
-				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
-				document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+				// document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+				// document.addEventListener( 'mousedown', onDocumentMouseDown, false );
 				document.addEventListener( 'keydown', onDocumentKeyDown, false );
 				document.addEventListener( 'keyup', onDocumentKeyUp, false );
 
@@ -154,11 +158,31 @@
 
 			}
 
-			function onDocumentMouseMove( event ) {
+			function onDocumentKeyDown(event){
+				switch( event.keyCode ) {
+					case 87: rollOverMesh.position.add(new THREE.Vector3(50,0,0)); // w "forwards", X axis
+						break;
+					case 65: rollOverMesh.position.add(new THREE.Vector3(0,0,-50));  // a "left", Z axis
+						break;
+					case 83: rollOverMesh.position.add(new THREE.Vector3(-50,0,0)); // s "backwards"
+						break;
+					case 68: rollOverMesh.position.add(new THREE.Vector3(0,0,50)); // d "right"
+						break;
+					case 81: rollOverMesh.position.add(new THREE.Vector3(0,50,0));  // q ("up", Y axis)
+						break;
+					case 69: rollOverMesh.position.add(new THREE.Vector3(0,-50,0));// e "down"
+						break;
+					// case 16: isShiftDown = true; break;
+
+				}
+				render();
+			}
+
+			function onDocumentMouseMove( mousePosition ) {
 
 				event.preventDefault();
 
-				mouse.set( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1 );
+				mouse.set( ( mousePosition[0] / window.innerWidth ) * 2 - 1, - ( mousePosition[1] / window.innerHeight ) * 2 + 1 );
 
 				raycaster.setFromCamera( mouse, camera );
 
@@ -222,15 +246,15 @@
 
 			}
 
-			function onDocumentKeyDown( event ) {
-
-				switch( event.keyCode ) {
-
-					case 16: isShiftDown = true; break;
-
-				}
-
-			}
+			// function onDocumentKeyDown( event ) {
+			//
+			// 	switch( event.keyCode ) {
+			//
+			// 		case 16: isShiftDown = true; break;
+			//
+			// 	}
+			//
+			// }
 
 			function onDocumentKeyUp( event ) {
 
