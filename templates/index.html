@@ -1,148 +1,74 @@
 <!DOCTYPE html>
 <html>
-<head>
-	<meta charset=utf-8>
-	<title>My first three.js app</title>
-	<style>
-	body { margin: 0; }
-	canvas { width: 100%; height: 100% }
-	</style>
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
-	<script type="text/javascript" charset="utf-8">
-			$( document ).ready(function() {
-				$.ajax({
-   					url: 'http://localhost/data.txt',
-   					cache: false,
-					success: function(data) {
-						console.log(data);
-					},
-					type: 'GET'
-				});
-			});
+	<head>
+		<meta charset=utf-8>
+		<title>My first three.js app</title>
+		<style>
+			body { margin: 0; }
+			canvas { width: 100%; height: 100% }
+		</style>
+	</head>
+	<body>
+		<script src="js/three.js"></script>
+		<script>
+			// fake data
+			var fakeData = [[-10, 0, 0],[0,12,0]];
+			var lastPoint = [0,12,0];
 
-	</script>
-</head>
-<body>
-	<script src="js/three.js"></script>
-	<script>
-	// three.js animataed line using BufferGeometry
+			// scene and camera and render
+			var scene = new THREE.Scene();
+			var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+			var renderer = new THREE.WebGLRenderer();
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			document.body.appendChild( renderer.domElement );
 
-var renderer, scene, camera;
+			camera.position.set(0,0,10);
+			camera.lookAt(new THREE.Vector3(0,0,0));
 
-var line;
-var MAX_POINTS = 20;
-var drawCount;
+			// setup geometry
+			var materialList = [];
+			var geometryList = [];
+			var lineList = [];
 
-init();
-animate();
 
-function init() {
+			var materialLine = new THREE.LineBasicMaterial({ color: 0x0000ff });
 
-	// info
-	var info = document.createElement( 'div' );
-	info.style.position = 'absolute';
-	info.style.top = '30px';
-	info.style.width = '100%';
-	info.style.textAlign = 'center';
-	info.style.color = '#fff';
-	info.style.fontWeight = 'bold';
-	info.style.backgroundColor = 'transparent';
-	info.style.zIndex = '1';
-	info.style.fontFamily = 'Monospace';
-	info.innerHTML = "three.js animataed line using BufferGeometry";
-	document.body.appendChild( info );
-
-	// renderer
-	renderer = new THREE.WebGLRenderer();
-	renderer.setPixelRatio( window.devicePixelRatio );
-	renderer.setSize( window.innerWidth, window.innerHeight );
-	document.body.appendChild( renderer.domElement );
-
-	// scene
-	scene = new THREE.Scene();
-
-	// camera
-	camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
-	camera.position.set( 0, 0, 1000 );
-
-	// geometry
-	var geometry = new THREE.BufferGeometry();
-
-	// attributes
-	var positions = new Float32Array( MAX_POINTS * 3 ); // 3 vertices per point
-	geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
-
-	// drawcalls
-	drawCount = 20; // draw the first 2 points, only
-	geometry.setDrawRange( 20, drawCount );
-
-	// material
-	var material = new THREE.LineBasicMaterial( { color: 0xff0000, linewidth: 2 } );
-
-	// line
-	line = new THREE.Line( geometry,  material );
-	scene.add( line );
-
-	// update positions
-	updatePositions();
-
-}
-
-// update positions
-function updatePositions() {
-
-	var positions = line.geometry.attributes.position.array;
-
-	var x = y = z = index = 0;
-
-	for ( var i = 0, l = MAX_POINTS; i < l; i ++ ) {
-
-		positions[ index ++ ] = x;
-		positions[ index ++ ] = y;
-		positions[ index ++ ] = z;
-
-		x += ( Math.random() - 0.5 ) * 30;
-		y += ( Math.random() - 0.5 ) * 30;
-		z += ( Math.random() - 0.5 ) * 30;
-
-	}
-
-}
-
-// render
-function render() {
-
-	renderer.render( scene, camera );
-
-}
-
-// animate
-function animate() {
-
-	requestAnimationFrame( animate );
-
-	drawCount = ( drawCount + 1 ) % MAX_POINTS;
-
-	line.geometry.setDrawRange( 0, drawCount );
-
-	if ( drawCount === 0 ) {
-
-		// periodically, generate new data
-
-		updatePositions();
-
-		line.geometry.attributes.position.needsUpdate = true; // required after the first render
-
-		line.material.color.setHSL( Math.random(), 1, 0.5 );
-
-	}
-
-	render();
-
-}
+			var geometryLine = new THREE.Geometry();
+			geometryLine.vertices.push(new THREE.Vector3(fakeData[0][0],fakeData[0][1],fakeData[0][2]));
+			geometryLine.vertices.push(new THREE.Vector3(fakeData[1][0],fakeData[1][1],fakeData[1][2]));
 
 
 
-	</script>
-</body>
+			var line = new THREE.Line(geometryLine, materialLine);
+
+			scene.add(line);
+
+			// render loop
+			function render() {
+			requestAnimationFrame( render );
+				renderer.render( scene, camera );
+			}
+			render();
+
+
+
+			function addPaintPoint(point){
+				//push new material and geometry
+				materialList.push(new THREE.LineBasicMaterial({ color: 0xfdfdfd, linewidth: 10 }));
+				geometryList.push(new THREE.Geometry());
+
+				//add vertices to new geometry
+				geometryList[geometryList.length-1].vertices.push(new THREE.Vector3(lastPoint[0],lastPoint[1],lastPoint[2]));
+				geometryList[geometryList.length-1].vertices.push(new THREE.Vector3(point[0],point[1],point[2]));
+
+				//set lastPoint
+				lastPoint=point;
+
+				//add new line with new geometry and material to line list and scene
+				lineList.push(new THREE.Line(geometryList[geometryList.length-1],materialList[materialList.length-1]));
+				scene.add(lineList[lineList.length-1]);
+			}
+
+		</script>
+	</body>
 </html>
