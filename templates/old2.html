@@ -62,7 +62,9 @@
 			function addPaintPoint(point,paintColor){
 				//push new material and geometry
 				materialList.push(new THREE.LineBasicMaterial({ color: paintColor, linewidth: 10 }));
-				geometryList.push(new THREE.Geometkry());
+
+
+				geometryList.push(new THREE.Geometry());
 
 				//add vertices to new geometry
 				geometryList[geometryList.length-1].vertices.push(new THREE.Vector3(lastPoint[0],lastPoint[1],lastPoint[2]));

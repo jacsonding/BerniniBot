@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - interactive - voxel painter</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #f0f0f0;
+				margin: 0px;
+				overflow: hidden;
+			}
+
+			#oldie { background-color: #ddd !important }
+		</style>
+	</head>
+	<body>
+
+		<script src="../build/three.js"></script>
+
+		<script src="js/Detector.js"></script>
+
+		<script src="../build/three.js"></script>
+
+		<script src="js/controls/OrbitControls.js"></script>
+
+		<script src="js/libs/stats.min.js"></script>
+
+		<script>
+
+			if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+
+			var container;
+			var camera, scene, renderer;
+			var plane, cube;
+			var mouse, raycaster, isShiftDown = false;
+
+			var rollOverMesh, rollOverMaterial;
+			var cubeGeo, cubeMaterial;
+
+			var colorList = [0xfeb74c,0x4dafff,0xff4d7c];
+
+			var objects = [];
+
+			// map size and resolution
+			var size = 1000;
+			var step = 10; //NOTE: should not be odd number
+
+			// toggles
+			var spaceToggle = false;
+			var colorSelected = 0;
+
+			//controls
+			var controls;
+
+			init();
+			render();
+
+			function init() {
+
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+
+				var info = document.createElement( 'div' );
+				info.style.position = 'absolute';
+				info.style.top = '10px';
+				info.style.width = '100%';
+				info.style.textAlign = 'center';
+				info.innerHTML = '<a href="http://threejs.org" target="_blank">AirPenn at Penn</a> - Jackson, Md, Owen, Tony<br><strong>click</strong>: add voxel, <strong>shift + click</strong>: remove voxel';
+				container.appendChild( info );
+
+				//CAMERA setup
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
+				camera.position.set( 500, 800, 1300 );
+				camera.lookAt( new THREE.Vector3() );
+
+				scene = new THREE.Scene();
+
+				// roll-over helpers
+
+				rollOverGeo = new THREE.BoxGeometry( step, step, step ); //a cube, (width, depth, height)
+				//draws meshes in simple way, not affected by lighting, flat
+				rollOverMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, opacity: 0.5, transparent: true } );
+				rollOverMesh = new THREE.Mesh( rollOverGeo, rollOverMaterial ); //triangular polygon mesh based objects
+				scene.add( rollOverMesh );
+				// set initial rollOverMesh position
+				rollOverMesh.position.setX(step/2);
+				rollOverMesh.position.setY(step/2);
+				rollOverMesh.position.setZ(step/2);
+
+				// cube size and texture
+
+				cubeGeo = new THREE.BoxGeometry( step, step, step );
+				// cubeMaterial = new THREE.MeshLambertMaterial( { color: 0xfeb74c } ); //, map: new THREE.TextureLoader().load( "textures/square-outline-textured.png" )
+
+				// grid
+
+				var geometry = new THREE.Geometry();
+
+				for ( var i = - size; i <= size; i += step ) {
+
+					geometry.vertices.push( new THREE.Vector3( - size, 0, i ) );
+					geometry.vertices.push( new THREE.Vector3(   size, 0, i ) );
+
+					geometry.vertices.push( new THREE.Vector3( i, 0, - size ) );
+					geometry.vertices.push( new THREE.Vector3( i, 0,   size ) );
+
+				}
+
+				var material = new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2, transparent: true } );
+
+				var line = new THREE.LineSegments( geometry, material );
+				scene.add( line );
+
+				//
+
+				raycaster = new THREE.Raycaster();
+				mouse = new THREE.Vector2();
+
+				var geometry = new THREE.PlaneBufferGeometry( 1000, 1000 );
+				geometry.rotateX( - Math.PI / 2 );
+
+				plane = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { visible: false } ) );
+				scene.add( plane );
+
+				objects.push( plane );
+
+				// Lights
+
+				var ambientLight = new THREE.AmbientLight( 0x606060 );
+				scene.add( ambientLight );
+
+				var directionalLight = new THREE.DirectionalLight( 0xffffff );
+				directionalLight.position.set( 1, 0.75, 0.5 ).normalize();
+				scene.add( directionalLight );
+
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setClearColor( 0xf0f0f0 );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				container.appendChild( renderer.domElement );
+
+				// document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+				// document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+				document.addEventListener( 'keydown', onDocumentKeyDown, false );
+				// document.addEventListener( 'keyup', onDocumentKeyUp, false );
+
+				//
+
+				window.addEventListener( 'resize', onWindowResize, false );
+
+				//addition of mouse camera controls
+				controls = new THREE.OrbitControls( camera, renderer.domElement );
+				controls.addEventListener( 'change', render ); // remove when using animation loop
+				// controls.enableZoom = false;
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			function onDocumentKeyDown(event){
+				switch( event.keyCode ) {
+					case 87:
+						if(rollOverMesh.position.getComponent(0)+step<=size){
+							rollOverMesh.position.add(new THREE.Vector3(step,0,0));
+						}// w "forwards", X axis
+						break;
+					case 65:
+						if(rollOverMesh.position.getComponent(2)-step>=-size){
+							rollOverMesh.position.add(new THREE.Vector3(0,0,-step));
+						}  // a "left", Z axis
+						break;
+					case 83:
+						if(rollOverMesh.position.getComponent(0)-step>=-size){
+							rollOverMesh.position.add(new THREE.Vector3(-step,0,0));
+						} // s "backwards"
+						break;
+					case 68:
+						if(rollOverMesh.position.getComponent(2)+step<=size){
+							rollOverMesh.position.add(new THREE.Vector3(0,0,step));
+						}// d "right"
+						break;
+					case 81:
+						if(rollOverMesh.position.getComponent(1)+step<=size){
+							rollOverMesh.position.add(new THREE.Vector3(0,step,0));
+						} // q ("up", Y axis)
+						break;
+					case 69:
+						if(rollOverMesh.position.getComponent(1)-step>=-size){
+							rollOverMesh.position.add(new THREE.Vector3(0,-step,0));
+						}// e "down"
+						break;
+					case 32:
+						spaceToggle=!spaceToggle;
+						break;
+					case 49: //1, colors
+						colorSelected=0;
+						break;
+					case 50: // 2 color
+						colorSelected=1;
+						break;
+					case 51: // 3 color
+						colorSelected=2;
+						break;
+					// case 16: isShiftDown = true; break;
+
+				}
+				if(spaceToggle){
+					var	voxel = new THREE.Mesh( cubeGeo, new THREE.MeshLambertMaterial( { color: colorList[colorSelected] } ));
+					voxel.position.copy(rollOverMesh.position);
+					scene.add( voxel );
+
+					objects.push( voxel );
+				}
+
+				render();
+			}
+
+			function render() {
+
+				renderer.render( scene, camera );
+
+			}
+
+			function sendToServer(){
+				//remove duplicates and send list
+			}
+
+		</script>
+
+	</body>
+</html>
