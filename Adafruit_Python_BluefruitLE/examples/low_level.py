@@ -35,7 +35,8 @@ initialized = False
 
 counter = 0
 accel_buffer = []
-
+current_pos_mm = [0, 0, 0]
+current_pos_cm = [0, 0, 0]
 
 def vec_add(v1, v2):
     return [x1 + x2 for (x1, x2) in zip(v1, v2)]
@@ -55,23 +56,33 @@ def vec_divide(v1, v2):
 def integrate_accel_pos(accel_buffer):
     global current_v
     global current_pos
+    global current_pos_mm
+    global current_pos_cm
     da1 = vec_subtract(convert_accel_to_std_units(accel_buffer[1]), convert_accel_to_std_units(accel_buffer[0]))
     da2 = vec_subtract(convert_accel_to_std_units(accel_buffer[2]), convert_accel_to_std_units(accel_buffer[1]))
     v1 = vec_add(vec_multiply(da1, data_interval_secs), current_v)
     v2 = vec_add(vec_multiply(da2, data_interval_secs), v1)
-    # convert to milli
-    current_pos = vec_divide(vec_add(vec_multiply(vec_subtract(v2, v1), data_interval_secs), current_pos), [1000, 1000, 1000])
+    current_pos = vec_add(vec_multiply(vec_subtract(v2, v1), data_interval_secs), current_pos)
     current_v = v2
+    # print "current_pos "+str(current_pos[0])
+    # print current_pos
+    current_pos_mm = vec_multiply(current_pos, [1000, 1000, 1000])
+    # print current_pos_mm
+    # print "current_pos_mm "+str(current_pos_mm[0])
+    current_pos_cm = vec_multiply(current_pos, [100, 100, 100])
+    # print "current_pos_cm "+str(current_pos_cm[0])
+
     
 
 #convert to m/s^2
 def convert_accel_to_std_units(accel_raw):
-    v = vec_multiply(vec_divide(accel_raw, [1000, 1000, 1000]), [9.8, 9.8, 9.8])
+    v = vec_multiply(vec_multiply(accel_raw, [0.001, 0.001, 0.001]), [9.8, 9.8, 9.8])
+    # print v
     return v
 
 
 def correct_gravity(accel_std):
-    a = [0, 0, -9.8]
+    a = [0, 0, 9.8]
     return vec_subtract(accel_raw, a)
 
 
@@ -148,6 +159,9 @@ def main():
         global accel_buffer
         global current_v
         global initialized
+        global current_pos
+        global current_pos_cm
+        global current_pos_mm
 
         if initialized == False:
             print 'Not Initialized'
@@ -161,14 +175,18 @@ def main():
                 initialized = True
         else:
             print 'initialized'
-            print accel_buffer
+            # print accel_buffer
             accel_buffer.pop(0)
             accel_buffer.append([x, y, z])
+            integrate_accel_pos(accel_buffer)
 
         with open('../../static/data.json', 'w') as some_file:
-            some_file.write('{"x":"'+str(current_pos[0])+'", "y":"'+str(current_pos[1])+'", "z":"'+str(current_pos[2])+'"}')
+            print current_pos_mm[0]
+            some_file.write('{"x":"'+str(current_pos[0]*1000)+'", "y":"'+str(current_pos[1]*1000)+'", "z":"'+str(current_pos[2]*1000)+'"}')
 
-        # print '{"x":"'+str(x)+'", "y":"'+str(y)+'", "z":"'+str(z)+'"} {"x":"'+str(current_v[0])+'", "y":"'+str(current_v[1])+'", "z":"'+str(current_v[2])+'"} {"x":"'+str(current_pos[0])+'", "y":"'+str(current_pos[1])+'", "z":"'+str(current_pos[2])+'"}'
+        # print str(accel_buffer[0][0])
+
+        # print '{"x":"'+str(x)+'", "y":"'+str(y)+'", "z":"'+str(z)+'"} {"x":"'+str(current_v[0])+'", "y":"'+str(current_v[1])+'", "z":"'+str(current_v[2])+'"} {"x":"'+str(current_pos_cm[0])+'", "y":"'+str(current_pos_cm[1])+'", "z":"'+str(current_pos_cm[2])+'"}'
 
         
 
