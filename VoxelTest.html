@@ -17,9 +17,13 @@
 	</head>
 	<body>
 
-		<script src="../build/three.js"></script>
-
 		<script src="js/Detector.js"></script>
+
+		<script src"js/three.js"></script>
+
+		<script src="js/OrbitControls.js"></script>
+
+		<script src="js/stats.min.js"></script>
 
 		<script>
 
@@ -34,6 +38,9 @@
 			var cubeGeo, cubeMaterial;
 
 			var objects = [];
+
+			//controls
+			var controls;
 
 			init();
 			render();
@@ -51,6 +58,7 @@
 				info.innerHTML = '<a href="http://threejs.org" target="_blank">three.js</a> - voxel painter - webgl<br><strong>click</strong>: add voxel, <strong>shift + click</strong>: remove voxel';
 				container.appendChild( info );
 
+				//CAMERA setup
 				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
 				camera.position.set( 500, 800, 1300 );
 				camera.lookAt( new THREE.Vector3() );
@@ -59,12 +67,13 @@
 
 				// roll-over helpers
 
-				rollOverGeo = new THREE.BoxGeometry( 50, 50, 50 );
+				rollOverGeo = new THREE.BoxGeometry( 50, 50, 50 ); //a cube, (width, depth, height)
+				//draws meshes in simple way, not affected by lighting, flat
 				rollOverMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, opacity: 0.5, transparent: true } );
-				rollOverMesh = new THREE.Mesh( rollOverGeo, rollOverMaterial );
+				rollOverMesh = new THREE.Mesh( rollOverGeo, rollOverMaterial ); //triangular polygon mesh based objects
 				scene.add( rollOverMesh );
 
-				// cubes
+				// cube size and texture
 
 				cubeGeo = new THREE.BoxGeometry( 50, 50, 50 );
 				cubeMaterial = new THREE.MeshLambertMaterial( { color: 0xfeb74c, map: new THREE.TextureLoader().load( "textures/square-outline-textured.png" ) } );
@@ -126,6 +135,11 @@
 				//
 
 				window.addEventListener( 'resize', onWindowResize, false );
+
+				//addition of mouse camera controls
+				controls = new THREE.OrbitControls( camera, renderer.domElement );
+				controls.addEventListener( 'change', render ); // remove when using animation loop
+				controls.enableZoom = false;
 
 			}
 
