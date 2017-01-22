@@ -11,11 +11,8 @@ import logging
 import time
 import uuid
 
-from socketIO_client import SocketIO, LoggingNamespace
-
 import airpen
 
-import ctypes
 
 import Adafruit_BluefruitLE
 
@@ -30,6 +27,52 @@ BTN_CHAR_UUID = uuid.UUID('87de0003-51b5-43c3-9ccb-993004dd54aa')
 # Get the BLE provider for the current platform.
 ble = Adafruit_BluefruitLE.get_provider()
 
+data_interval_secs = [0.05, 0.05, 0.05]
+current_v = [0, 0, 0]
+current_pos = [0, 0, 0]
+
+initialized = False
+
+counter = 0
+accel_buffer = []
+
+
+def vec_add(v1, v2):
+    return [x1 + x2 for (x1, x2) in zip(v1, v2)]
+
+def vec_subtract(v1, v2):
+    return [x1 - x2 for (x1, x2) in zip(v1, v2)]
+
+def vec_multiply(v1, v2):
+    return [x1 * x2 for (x1, x2) in zip(v1, v2)]
+
+def vec_divide(v1, v2):
+    return [x1 / x2 for (x1, x2) in zip(v1, v2)]
+
+
+
+
+def integrate_accel_pos(accel_buffer):
+    global current_v
+    global current_pos
+    da1 = vec_subtract(convert_accel_to_std_units(accel_buffer[1]), convert_accel_to_std_units(accel_buffer[0]))
+    da2 = vec_subtract(convert_accel_to_std_units(accel_buffer[2]), convert_accel_to_std_units(accel_buffer[1]))
+    v1 = vec_add(vec_multiply(da1, data_interval_secs), current_v)
+    v2 = vec_add(vec_multiply(da2, data_interval_secs), v1)
+    # convert to milli
+    current_pos = vec_divide(vec_add(vec_multiply(vec_subtract(v2, v1), data_interval_secs), current_pos), [1000, 1000, 1000])
+    current_v = v2
+    
+
+#convert to m/s^2
+def convert_accel_to_std_units(accel_raw):
+    v = vec_multiply(vec_divide(accel_raw, [1000, 1000, 1000]), [9.8, 9.8, 9.8])
+    return v
+
+
+def correct_gravity(accel_std):
+    a = [0, 0, -9.8]
+    return vec_subtract(accel_raw, a)
 
 
 # class Namespace(BaseNamespace):
@@ -101,8 +144,33 @@ def main():
     # primitives to send data to other threads.
     def received_accel(data):
         x, y, z = airpen.airpen(data)
+        global counter
+        global accel_buffer
+        global current_v
+        global initialized
+
+        if initialized == False:
+            print 'Not Initialized'
+            if counter < 3:
+                print 'counter < 3'
+                accel_buffer.append([x, y, z])
+                counter += 1
+            else:
+                print 'counter > 3 initialized'
+                integrate_accel_pos(accel_buffer)
+                initialized = True
+        else:
+            print 'initialized'
+            print accel_buffer
+            accel_buffer.pop(0)
+            accel_buffer.append([x, y, z])
+
         with open('../../static/data.json', 'w') as some_file:
-            some_file.write('{"x":"'+str(x)+'", "y":"'+str(y)+'", "z":"'+str(z)+'"}')
+            some_file.write('{"x":"'+str(current_pos[0])+'", "y":"'+str(current_pos[1])+'", "z":"'+str(current_pos[2])+'"}')
+
+        # print '{"x":"'+str(x)+'", "y":"'+str(y)+'", "z":"'+str(z)+'"} {"x":"'+str(current_v[0])+'", "y":"'+str(current_v[1])+'", "z":"'+str(current_v[2])+'"} {"x":"'+str(current_pos[0])+'", "y":"'+str(current_pos[1])+'", "z":"'+str(current_pos[2])+'"}'
+
+        
 
         # with SocketIO('localhost', 80, LoggingNamespace) as socketIO:
         #     print 'socket instance'
