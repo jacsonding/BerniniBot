@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+		<title>My first three.js app</title>
+		<style>
+			body { margin: 0; }
+			canvas { width: 100%; height: 100% }
+		</style>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+		<script type="text/javascript" charset="utf-8">
+			var color = 0xffffff;
+
+			$( document ).ready(function() {
+				getshit();
+			});
+
+
+			function getshit(){
+				setInterval(function(){ 
+
+					$.ajax({
+	   					url: 'http://localhost/data.json',
+	   					cache: false,
+						success: function(data) {
+							console.log(data);
+							var x = data.x;
+							var y = data.y;
+							var z = data.z;
+
+							addPaintPoint([x, y, z], color);
+
+						},
+						type: 'GET'
+					});
+
+
+					$.ajax({
+	   					url: 'http://localhost/btn.json',
+	   					cache: false,
+						success: function(data) {
+							console.log(data);
+							var btn_id = data.id;
+							var state = data.state;
+
+							if(state == "1"){
+								if(btn_id == "1"){
+									color = 0xff0000; 
+								} else if(btn_id == "2") {
+									color = 0x00ff00;
+								} else if(btn_id == "3") {
+									color = 0x0000ff;
+								} else {
+									color = 0xffffff;
+								}
+							} else {
+								color = 0xffffff;
+							}
+
+						},
+						type: 'GET'
+					});
+
+
+				 }, 150);
+					
+			}
+
+
+		</script>
+	</head>
+	<body>
+		<script src="js/three.js"></script>
+		<script src="js/OrbitControls.js"></script>
+		<script>
+			
+			var lastPoint = [0,0,0];
+
+			// scene and camera and render
+			var controls;
+			var scene = new THREE.Scene();
+			var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+			var renderer = new THREE.WebGLRenderer();
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			document.body.appendChild( renderer.domElement );
+
+			camera.position.set(0,0,10);
+			camera.lookAt(new THREE.Vector3(0,0,0));
+
+			// setup geometry
+			var materialList = [];
+			var geometryList = [];
+			var lineList = [];
+
+
+			var materialLine = new THREE.LineBasicMaterial({ color: 0x0000ff });
+
+			var geometryLine = new THREE.Geometry();
+
+
+
+			var line = new THREE.Line(geometryLine, materialLine);
+
+			scene.add(line);
+
+			// render loop
+			function render() {
+			requestAnimationFrame( render );
+				renderer.render( scene, camera );
+			}
+			render();
+
+
+			//controls
+			controls = new THREE.OrbitControls( camera, renderer.domElement );
+			controls.addEventListener( 'change', render );
+
+
+			function addPaintPoint(point, paintColor){
+				console.log("Color: "+paintColor);
+				//push new material and geometry
+				materialList.push(new THREE.LineBasicMaterial({ color: paintColor, linewidth: 10 }));
+				geometryList.push(new THREE.Geometry());
+
+				//add vertices to new geometry
+				geometryList[geometryList.length-1].vertices.push(new THREE.Vector3(lastPoint[0],lastPoint[1],lastPoint[2]));
+				geometryList[geometryList.length-1].vertices.push(new THREE.Vector3(point[0],point[1],point[2]));
+
+				//set lastPoint
+				lastPoint=point;
+
+				//add new line with new geometry and material to line list and scene
+				lineList.push(new THREE.Line(geometryList[geometryList.length-1],materialList[materialList.length-1]));
+				scene.add(lineList[lineList.length-1]);
+			}
+
+		</script>
+	</body>
+</html>

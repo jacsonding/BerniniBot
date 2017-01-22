@@ -171,7 +171,6 @@ def main():
             counter += 1
         else:
             print 'counter = 2 initialized'
-            accel_buffer.append([x, y, z])
             integrate_accel_pos(accel_buffer)
             accel_buffer.pop(0)
             accel_buffer.pop(0)
@@ -186,7 +185,8 @@ def main():
 
         with open('../../static/data.json', 'w') as some_file:
             # print current_pos_mm[0]
-            some_file.write('{"x":"'+str(current_pos_mm[0])+'", "y":"'+str(current_pos_mm[1])+'", "z":"'+str(current_pos_mm[2])+'"}')
+            # some_file.write('{"x":"'+str(current_pos_mm[0])+'", "y":"'+str(current_pos_mm[1])+'", "z":"'+str(current_pos_mm[2])+'"}')
+            some_file.write('{"x":"'+str(current_v[0])+'", "y":"'+str(current_v[1])+'", "z":"'+str(current_v[2])+'"}')
 
         # print str(accel_buffer[0][0])
 
