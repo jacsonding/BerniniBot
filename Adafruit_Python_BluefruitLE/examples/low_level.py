@@ -15,6 +15,8 @@ from socketIO_client import SocketIO, LoggingNamespace
 
 import airpen
 
+import ctypes
+
 import Adafruit_BluefruitLE
 
 
@@ -23,8 +25,8 @@ import Adafruit_BluefruitLE
 
 # Define service and characteristic UUIDs used by the UART service.
 ACCEL_SERVICE_UUID = uuid.UUID('87de0001-51b5-43c3-9ccb-993004dd54aa')
-ACCEL_DATA_CHAR = uuid.UUID('87de0002-51b5-43c3-9ccb-993004dd54aa')
-
+ACCEL_DATA_CHAR_UUID = uuid.UUID('87de0002-51b5-43c3-9ccb-993004dd54aa')
+BTN_CHAR_UUID = uuid.UUID('87de0003-51b5-43c3-9ccb-993004dd54aa')
 # Get the BLE provider for the current platform.
 ble = Adafruit_BluefruitLE.get_provider()
 
@@ -82,11 +84,12 @@ def main():
     # service and characteristic UUID lists.  Will time out after 60 seconds
     # (specify timeout_sec parameter to override).
     print('Discovering services...')
-    device.discover([ACCEL_SERVICE_UUID], [ACCEL_DATA_CHAR])
+    device.discover([ACCEL_SERVICE_UUID], [ACCEL_DATA_CHAR_UUID])
 
     # Find the UART service and its characteristics.
     accel_service = device.find_service(ACCEL_SERVICE_UUID)
-    data_char = accel_service.find_characteristic(ACCEL_DATA_CHAR)
+    data_char = accel_service.find_characteristic(ACCEL_DATA_CHAR_UUID)
+    btn_char = accel_service.find_characteristic(BTN_CHAR_UUID)
 
     # Write a string to the TX characteristic.
     # print('Sending message to device...')
@@ -96,11 +99,10 @@ def main():
     # be called on a different thread so be careful to make sure state that
     # the function changes is thread safe.  Use Queue or other thread-safe
     # primitives to send data to other threads.
-    def received(data):
-        values = airpen.airpen(data)
-        print values
-        with open('../../static/data.txt', 'w') as some_file:
-            some_file.write(str(values))
+    def received_accel(data):
+        x, y, z = airpen.airpen(data)
+        with open('../../static/data.json', 'w') as some_file:
+            some_file.write('{"x":"'+str(x)+'", "y":"'+str(y)+'", "z":"'+str(z)+'"}')
 
         # with SocketIO('localhost', 80, LoggingNamespace) as socketIO:
         #     print 'socket instance'
@@ -112,13 +114,20 @@ def main():
         #     txt.write(str(.getvalue()))
         # print('Received: {0}'.format(data))
 
-    # Turn on notification of RX characteristics using the callback above.
-    print('Subscribing to RX characteristic changes...')
-    data_char.start_notify(received)
+    def received_btn(data):
+        btn_id, state = airpen.airpen(data)
+        with open('../../static/btn.json', 'w') as some_file:
+            some_file.write('{"id":"'+str(btn_id)+'", "state":"'+str(state)+'"}')
+
+    # Turn on notification of ACCEL characteristics using the callback above.
+    print('Subscribing to ACCEL characteristic changes...')
+    data_char.start_notify(received_accel)
+
+    btn_char.start_notify(received_btn)
 
     # Now just wait for 30 seconds to receive data.
     print('Waiting 60 seconds to receive data from the device...')
-    time.sleep(60)
+    time.sleep(10000)
 
     # Make sure device is disconnected on exit.
     # device.disconnect()
