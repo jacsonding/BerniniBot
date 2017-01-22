@@ -13,7 +13,6 @@
 
 			$( document ).ready(function() {
 				getshit();
-				getothershit();
 			});
 
 
@@ -24,7 +23,7 @@
 	   					url: 'http://localhost/data.json',
 	   					cache: false,
 						success: function(data) {
-							// console.log(data);
+							console.log(data);
 							var x = data.x;
 							var y = data.y;
 							var z = data.z;
@@ -35,13 +34,6 @@
 						type: 'GET'
 					});
 
-				 }, 100);
-					
-			}
-
-
-			function getothershit(){
-				setInterval(function(){ 
 
 					$.ajax({
 	   					url: 'http://localhost/btn.json',
@@ -69,9 +61,11 @@
 						type: 'GET'
 					});
 
-				 }, 100);
+
+				 }, 150);
 					
 			}
+
 
 		</script>
 	</head>
@@ -79,9 +73,8 @@
 		<script src="js/three.js"></script>
 		<script src="js/OrbitControls.js"></script>
 		<script>
-			// fake data
-			var fakeData = [[-10, 0, 0],[0,12,0]];
-			var lastPoint = [0,12,0];
+			
+			var lastPoint = [0,0,0];
 
 			// scene and camera and render
 			var controls;
@@ -103,8 +96,6 @@
 			var materialLine = new THREE.LineBasicMaterial({ color: 0x0000ff });
 
 			var geometryLine = new THREE.Geometry();
-			geometryLine.vertices.push(new THREE.Vector3(fakeData[0][0],fakeData[0][1],fakeData[0][2]));
-			geometryLine.vertices.push(new THREE.Vector3(fakeData[1][0],fakeData[1][1],fakeData[1][2]));
 
 
 
@@ -125,9 +116,8 @@
 			controls.addEventListener( 'change', render );
 
 
-
 			function addPaintPoint(point, paintColor){
-				console.log(paintColor);
+				console.log("Color: "+paintColor);
 				//push new material and geometry
 				materialList.push(new THREE.LineBasicMaterial({ color: paintColor, linewidth: 10 }));
 				geometryList.push(new THREE.Geometry());

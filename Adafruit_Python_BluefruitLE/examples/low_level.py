@@ -163,26 +163,30 @@ def main():
         global current_pos_cm
         global current_pos_mm
 
-        if initialized == False:
-            print 'Not Initialized'
-            if counter < 3:
-                print 'counter < 3'
-                accel_buffer.append([x, y, z])
-                counter += 1
-            else:
-                print 'counter > 3 initialized'
-                integrate_accel_pos(accel_buffer)
-                initialized = True
+        # if initialized == False:
+        # print 'Not Initialized'
+        if counter != 3:
+            print 'counter < 2'
+            accel_buffer.append([x, y, z])
+            counter += 1
         else:
-            print 'initialized'
-            # print accel_buffer
-            accel_buffer.pop(0)
+            print 'counter = 2 initialized'
             accel_buffer.append([x, y, z])
             integrate_accel_pos(accel_buffer)
+            accel_buffer.pop(0)
+            accel_buffer.pop(0)
+            counter = 1
+            # initialized = True
+        # else:
+        #     print 'initialized'
+        #     # print accel_buffer
+        #     accel_buffer.pop()
+        #     accel_buffer.append([x, y, z])
+        #     integrate_accel_pos(accel_buffer)
 
         with open('../../static/data.json', 'w') as some_file:
-            print current_pos_mm[0]
-            some_file.write('{"x":"'+str(current_pos[0]*1000)+'", "y":"'+str(current_pos[1]*1000)+'", "z":"'+str(current_pos[2]*1000)+'"}')
+            # print current_pos_mm[0]
+            some_file.write('{"x":"'+str(current_pos_mm[0])+'", "y":"'+str(current_pos_mm[1])+'", "z":"'+str(current_pos_mm[2])+'"}')
 
         # print str(accel_buffer[0][0])
 
