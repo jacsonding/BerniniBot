@@ -1,7 +1,7 @@
 #ifndef DATA_FILTER__H__
 #define DATA_FILTER__H__
 
-#define MOVING_AVG_SIZE 8
+#define MOVING_AVG_SIZE 2
 
 #include "drv_imu.h"
 

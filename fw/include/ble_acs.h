@@ -17,7 +17,6 @@ extern "C" {
 #define ACS_UUID_SERVICE                    0x0001
 #define ACS_UUID_ACCEL_DATA_CHAR            0x0002
 #define ACS_UUID_BUTTON_CHAR                0x0003
-#define ACS_UUID_POSITION_DATA_CHAR         0x0004
 
 
 // Forward declaration of the ble_acs_t type.

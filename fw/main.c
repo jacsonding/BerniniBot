@@ -567,8 +567,8 @@ void accel_data_timeout_handler(void * p_context)
   APP_ERROR_CHECK(err_code);
 
 
-  err_code = ble_acs_accel_data_notify(&m_acs, (uint8_t*)calculate_running_avg(&accel_data));
-//  err_code = ble_acs_accel_data_notify(&m_acs, (uint8_t*)&accel_data);
+//  err_code = ble_acs_accel_data_notify(&m_acs, (uint8_t*)calculate_running_avg(&accel_data));
+  err_code = ble_acs_accel_data_notify(&m_acs, (uint8_t*)&accel_data);
 
   APP_ERROR_CHECK(err_code);
 
@@ -590,7 +590,8 @@ int main(void)
 
 	  static const  nrf_drv_twi_t m_twi_sensors = NRF_DRV_TWI_INSTANCE(0);
 
-  	drv_imu_init_t imu_init = { .p_twi_instance = &m_twi_sensors };
+
+	  drv_imu_init_t imu_init = { .p_twi_instance = &m_twi_sensors };
   	err_code = drv_imu_init(&imu_init);
 
     drv_imu_accel_data_t init_accel_data[MOVING_AVG_SIZE];
