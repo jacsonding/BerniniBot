@@ -10,12 +10,14 @@
 	</head>
 	<body>
 		<script src="js/three.js"></script>
+		<script src="js/OrbitControls.js"></script>
 		<script>
 			// fake data
 			var fakeData = [[-10, 0, 0],[0,12,0]];
 			var lastPoint = [0,12,0];
 
 			// scene and camera and render
+			var controls;
 			var scene = new THREE.Scene();
 			var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
 			var renderer = new THREE.WebGLRenderer();
@@ -51,11 +53,16 @@
 			render();
 
 
+			//controls
+			controls = new THREE.OrbitControls( camera, renderer.domElement );
+			controls.addEventListener( 'change', render );
 
-			function addPaintPoint(point){
+
+
+			function addPaintPoint(point,paintColor){
 				//push new material and geometry
-				materialList.push(new THREE.LineBasicMaterial({ color: 0xfdfdfd, linewidth: 10 }));
-				geometryList.push(new THREE.Geometry());
+				materialList.push(new THREE.LineBasicMaterial({ color: paintColor, linewidth: 10 }));
+				geometryList.push(new THREE.Geometkry());
 
 				//add vertices to new geometry
 				geometryList[geometryList.length-1].vertices.push(new THREE.Vector3(lastPoint[0],lastPoint[1],lastPoint[2]));
