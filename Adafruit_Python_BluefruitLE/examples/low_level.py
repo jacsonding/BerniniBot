@@ -85,7 +85,7 @@ def convert_accel_to_std_units(accel_raw):
 def correct_gravity(accel_std):
     a = [0, 0, 9.8]
     v = vec_subtract(accel_std, a)
-    print v
+    # print v
     return v
 
 
@@ -169,16 +169,16 @@ def main():
         # if initialized == False:
         # print 'Not Initialized'
         if counter != 3:
-            print 'counter < 2'
+            # print 'counter < 2'
             accel_buffer.append([x, y, z])
             counter += 1
         else:
-            print 'counter = 2 initialized'
+            # print 'counter = 2 initialized'
             integrate_accel_pos(accel_buffer)
             accel_buffer.pop(0)
             accel_buffer.pop(0)
             counter = 1
-            # initialized = True
+            initialized = True
         # else:
         #     print 'initialized'
         #     # print accel_buffer
@@ -186,10 +186,14 @@ def main():
         #     accel_buffer.append([x, y, z])
         #     integrate_accel_pos(accel_buffer)
 
+        values = convert_accel_to_std_units([x, y, z])
+
         with open('../../static/data.json', 'w') as some_file:
             # print current_pos_mm[0]
-            # some_file.write('{"x":"'+str(current_pos_mm[0])+'", "y":"'+str(current_pos_mm[1])+'", "z":"'+str(current_pos_mm[2])+'"}')
-            some_file.write('{"x":"'+str(current_v[0])+'", "y":"'+str(current_v[1])+'", "z":"'+str(current_v[2])+'"}')
+            some_file.write('{"x":"'+str(current_pos_mm[0])+'", "y":"'+str(current_pos_mm[1])+'", "z":"'+str(current_pos_mm[2])+'"}')
+            # some_file.write('{"x":"'+str(values[0])+'", "y":"'+str(values[1])+'", "z":"'+str(values[2])+'"}')
+
+        # print '["'+str(current_pos_cm[0])+'", "'+str(current_pos_cm[1])+'", "'+str(current_pos_cm[2])+'"], '
 
         # print str(accel_buffer[0][0])
 

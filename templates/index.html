@@ -23,8 +23,14 @@
 				getshit();
 			});
 
-			// var x_data = []
 
+			var x_data = [];
+			var y_data = [];
+			var z_data = [];
+
+			var count = 0;
+
+			var max = 3;
 
 			function getshit(){
 				setInterval(function(){ 
@@ -37,6 +43,67 @@
 							var x = data.x;
 							var y = data.y;
 							var z = data.z;
+
+							if(count == max){
+								x_diff = x_data[max-1] - x_data[0];
+								y_diff = y_data[max-1] - y_data[0];
+								z_diff = z_data[max-1] - z_data[0];
+
+								abs_x = Math.abs(x_diff);
+								abs_y = Math.abs(y_diff);
+								abs_z = Math.abs(z_diff);
+
+								val = [abs_x, abs_y, abs_z];
+
+								largest = Math.max.apply(Math, val);
+
+								if(largest > 3){
+									if(largest == abs_x){
+										if(x_diff > 0){
+											onDocumentKeyDown2(87);
+											onDocumentKeyDown2(87);
+											
+										} else {
+											onDocumentKeyDown2(83);
+											onDocumentKeyDown2(83);
+											
+										}
+									} else if(largest == abs_y){
+										if(y_diff > 0){
+											onDocumentKeyDown2(65);
+											onDocumentKeyDown2(65);
+											
+										} else {
+											onDocumentKeyDown2(68);
+											onDocumentKeyDown2(68);
+											
+										}
+									} else {
+										if(z_diff > 0){
+											onDocumentKeyDown2(81);
+											onDocumentKeyDown2(81);
+											
+										} else {
+											onDocumentKeyDown2(69);
+											onDocumentKeyDown2(69);
+											
+										}
+									}
+								}
+
+								count = 0;
+
+								x_data = [];
+								y_data = [];
+								z_data = [];
+
+							} else {
+								x_data.push(x);
+								y_data.push(y);
+								z_data.push(z);
+
+								count++;
+							}
 
 						},
 						type: 'GET'
@@ -52,17 +119,20 @@
 							var state = data.state;
 
 							if(state == "1"){
+
 								if(btn_id == "1"){
-									color = 0xff0000; 
+									colorSelected = 0;
 								} else if(btn_id == "2") {
-									color = 0x00ff00;
+									colorSelected = 1;
 								} else if(btn_id == "3") {
-									color = 0x0000ff;
+									colorSelected = 2;
 								} else {
-									color = 0xffffff;
+									colorSelected = 0;
 								}
+
+								spaceToggle = true;
 							} else {
-								color = 0xffffff;
+								spaceToggle = false;
 							}
 
 						},
