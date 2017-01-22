@@ -82,10 +82,7 @@
 static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;    /**< Handle of the current connection. */
 static ble_acs_t                        m_acs;
 static bool                             m_is_data_subscribed;
-
-
-
-
+static bool                             m_is_btn_subscribed;
 
 APP_TIMER_DEF(m_accel_data_timer_id);
 
@@ -127,7 +124,11 @@ static void data_subscr_handler(ble_acs_t * p_acs, bool is_data_subscribed)
 {
     m_is_data_subscribed = is_data_subscribed;
     app_timer_start(m_accel_data_timer_id, ACCEL_DATA_TIMER_MS, NULL);
-    //TODO: send 1 packet first
+}
+
+static void btn_subscr_handler(ble_acs_t * p_acs, bool is_btn_subscribed)
+{
+    m_is_btn_subscribed = is_btn_subscribed;
 }
 
 
@@ -140,6 +141,7 @@ static void services_init(void)
 
     memset(&acs_init, 0, sizeof(acs_init));
     acs_init.data_subscr_handler = data_subscr_handler;
+    acs_init.btn_subscr_handler = btn_subscr_handler;
 
     err_code = ble_acs_init(&m_acs, &acs_init);
     APP_ERROR_CHECK(err_code);
@@ -430,8 +432,52 @@ void bsp_event_handler(bsp_event_t event)
             }
             break;
         case BSP_EVENT_KEY_0: //On Button 1 press
-        	//Activate data transfer
-
+            if(m_is_btn_subscribed)
+            {
+              ble_acs_on_button_change(&m_acs, true, 0);
+            }
+            break;
+        case BSP_EVENT_KEY_1: //On Button 2 press
+            if(m_is_btn_subscribed)
+            {
+              ble_acs_on_button_change(&m_acs, true, 1);
+            }
+            break;
+        case BSP_EVENT_KEY_2: //On Button 3 press
+            if(m_is_btn_subscribed)
+            {
+              ble_acs_on_button_change(&m_acs, true, 2);
+            }
+            break;
+        case BSP_EVENT_KEY_3: //On Button 4 press
+            if(m_is_btn_subscribed)
+            {
+              ble_acs_on_button_change(&m_acs, true, 3);
+            }
+            break;
+        case BSP_EVENT_KEY_0_RELEASE: //On Button 1 release
+            if(m_is_btn_subscribed)
+            {
+              ble_acs_on_button_change(&m_acs, false, 0);
+            }
+            break;
+        case BSP_EVENT_KEY_1_RELEASE: //On Button 2 release
+            if(m_is_btn_subscribed)
+            {
+              ble_acs_on_button_change(&m_acs, false, 1);
+            }
+            break;
+        case BSP_EVENT_KEY_2_RELEASE: //On Button 3 release
+            if(m_is_btn_subscribed)
+            {
+              ble_acs_on_button_change(&m_acs, false, 2);
+            }
+            break;
+        case BSP_EVENT_KEY_3_RELEASE: //On Button 4 release
+            if(m_is_btn_subscribed)
+            {
+              ble_acs_on_button_change(&m_acs, false, 3);
+            }
             break;
         default:
             break;
@@ -484,6 +530,11 @@ static void buttons_leds_init(bool * p_erase_bonds)
 
     err_code = bsp_btn_ble_init(NULL, &startup_event);
     APP_ERROR_CHECK(err_code);
+
+    bsp_event_to_button_action_assign(0, BSP_BUTTON_ACTION_RELEASE, BSP_EVENT_KEY_0_RELEASE);
+    bsp_event_to_button_action_assign(1, BSP_BUTTON_ACTION_RELEASE, BSP_EVENT_KEY_1_RELEASE);
+    bsp_event_to_button_action_assign(2, BSP_BUTTON_ACTION_RELEASE, BSP_EVENT_KEY_2_RELEASE);
+    bsp_event_to_button_action_assign(3, BSP_BUTTON_ACTION_RELEASE, BSP_EVENT_KEY_3_RELEASE);
 
     *p_erase_bonds = (startup_event == BSP_EVENT_CLEAR_BONDING_DATA);
 }

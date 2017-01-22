@@ -4,67 +4,67 @@
  * found in the license.txt file.
  */
 #include "sdk_config.h"
-#if BLE_LBS_ENABLED
-#include "ble_lbs.h"
+#if BLE_ACS_ENABLED
+#include "ble_acs.h"
 #include "ble_srv_common.h"
 #include "sdk_common.h"
 
 
 /**@brief Function for handling the Connect event.
  *
- * @param[in] p_lbs      LED Button Service structure.
+ * @param[in] p_acs      LED Button Service structure.
  * @param[in] p_ble_evt  Event received from the BLE stack.
  */
-static void on_connect(ble_lbs_t * p_lbs, ble_evt_t * p_ble_evt)
+static void on_connect(ble_acs_t * p_acs, ble_evt_t * p_ble_evt)
 {
-    p_lbs->conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
+    p_acs->conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
 }
 
 
 /**@brief Function for handling the Disconnect event.
  *
- * @param[in] p_lbs      LED Button Service structure.
+ * @param[in] p_acs      LED Button Service structure.
  * @param[in] p_ble_evt  Event received from the BLE stack.
  */
-static void on_disconnect(ble_lbs_t * p_lbs, ble_evt_t * p_ble_evt)
+static void on_disconnect(ble_acs_t * p_acs, ble_evt_t * p_ble_evt)
 {
     UNUSED_PARAMETER(p_ble_evt);
-    p_lbs->conn_handle = BLE_CONN_HANDLE_INVALID;
+    p_acs->conn_handle = BLE_CONN_HANDLE_INVALID;
 }
 
 
 /**@brief Function for handling the Write event.
  *
- * @param[in] p_lbs      LED Button Service structure.
+ * @param[in] p_acs      LED Button Service structure.
  * @param[in] p_ble_evt  Event received from the BLE stack.
  */
-static void on_write(ble_lbs_t * p_lbs, ble_evt_t * p_ble_evt)
+static void on_write(ble_acs_t * p_acs, ble_evt_t * p_ble_evt)
 {
     ble_gatts_evt_write_t * p_evt_write = &p_ble_evt->evt.gatts_evt.params.write;
 
-    if ((p_evt_write->handle == p_lbs->led_char_handles.value_handle) &&
+    if ((p_evt_write->handle == p_acs->led_char_handles.value_handle) &&
         (p_evt_write->len == 1) &&
-        (p_lbs->led_write_handler != NULL))
+        (p_acs->led_write_handler != NULL))
     {
-        p_lbs->led_write_handler(p_lbs, p_evt_write->data[0]);
+        p_acs->led_write_handler(p_acs, p_evt_write->data[0]);
     }
 }
 
 
-void ble_lbs_on_ble_evt(ble_lbs_t * p_lbs, ble_evt_t * p_ble_evt)
+void ble_acs_on_ble_evt(ble_acs_t * p_acs, ble_evt_t * p_ble_evt)
 {
     switch (p_ble_evt->header.evt_id)
     {
         case BLE_GAP_EVT_CONNECTED:
-            on_connect(p_lbs, p_ble_evt);
+            on_connect(p_acs, p_ble_evt);
             break;
 
         case BLE_GAP_EVT_DISCONNECTED:
-            on_disconnect(p_lbs, p_ble_evt);
+            on_disconnect(p_acs, p_ble_evt);
             break;
 
         case BLE_GATTS_EVT_WRITE:
-            on_write(p_lbs, p_ble_evt);
+            on_write(p_acs, p_ble_evt);
             break;
 
         default:
@@ -76,12 +76,12 @@ void ble_lbs_on_ble_evt(ble_lbs_t * p_lbs, ble_evt_t * p_ble_evt)
 
 /**@brief Function for adding the LED Characteristic.
  *
- * @param[in] p_lbs      LED Button Service structure.
- * @param[in] p_lbs_init LED Button Service initialization structure.
+ * @param[in] p_acs      LED Button Service structure.
+ * @param[in] p_acs_init LED Button Service initialization structure.
  *
  * @retval NRF_SUCCESS on success, else an error value from the SoftDevice
  */
-static uint32_t led_char_add(ble_lbs_t * p_lbs, const ble_lbs_init_t * p_lbs_init)
+static uint32_t led_char_add(ble_acs_t * p_acs, const ble_acs_init_t * p_acs_init)
 {
     ble_gatts_char_md_t char_md;
     ble_gatts_attr_t    attr_char_value;
@@ -98,8 +98,8 @@ static uint32_t led_char_add(ble_lbs_t * p_lbs, const ble_lbs_init_t * p_lbs_ini
     char_md.p_cccd_md         = NULL;
     char_md.p_sccd_md         = NULL;
 
-    ble_uuid.type = p_lbs->uuid_type;
-    ble_uuid.uuid = LBS_UUID_LED_CHAR;
+    ble_uuid.type = p_acs->uuid_type;
+    ble_uuid.uuid = ACS_UUID_LED_CHAR;
 
     memset(&attr_md, 0, sizeof(attr_md));
 
@@ -119,21 +119,21 @@ static uint32_t led_char_add(ble_lbs_t * p_lbs, const ble_lbs_init_t * p_lbs_ini
     attr_char_value.max_len      = sizeof(uint8_t);
     attr_char_value.p_value      = NULL;
 
-    return sd_ble_gatts_characteristic_add(p_lbs->service_handle,
+    return sd_ble_gatts_characteristic_add(p_acs->service_handle,
                                            &char_md,
                                            &attr_char_value,
-                                           &p_lbs->led_char_handles);
+                                           &p_acs->led_char_handles);
 }
 
 
 /**@brief Function for adding the Button Characteristic.
  *
- * @param[in] p_lbs      LED Button Service structure.
- * @param[in] p_lbs_init LED Button Service initialization structure.
+ * @param[in] p_acs      LED Button Service structure.
+ * @param[in] p_acs_init LED Button Service initialization structure.
  *
  * @retval NRF_SUCCESS on success, else an error value from the SoftDevice
  */
-static uint32_t button_char_add(ble_lbs_t * p_lbs, const ble_lbs_init_t * p_lbs_init)
+static uint32_t button_char_add(ble_acs_t * p_acs, const ble_acs_init_t * p_acs_init)
 {
     ble_gatts_char_md_t char_md;
     ble_gatts_attr_md_t cccd_md;
@@ -157,8 +157,8 @@ static uint32_t button_char_add(ble_lbs_t * p_lbs, const ble_lbs_init_t * p_lbs_
     char_md.p_cccd_md         = &cccd_md;
     char_md.p_sccd_md         = NULL;
 
-    ble_uuid.type = p_lbs->uuid_type;
-    ble_uuid.uuid = LBS_UUID_BUTTON_CHAR;
+    ble_uuid.type = p_acs->uuid_type;
+    ble_uuid.uuid = ACS_UUID_BUTTON_CHAR;
 
     memset(&attr_md, 0, sizeof(attr_md));
 
@@ -178,53 +178,58 @@ static uint32_t button_char_add(ble_lbs_t * p_lbs, const ble_lbs_init_t * p_lbs_
     attr_char_value.max_len      = sizeof(uint8_t);
     attr_char_value.p_value      = NULL;
 
-    return sd_ble_gatts_characteristic_add(p_lbs->service_handle,
+    return sd_ble_gatts_characteristic_add(p_acs->service_handle,
                                                &char_md,
                                                &attr_char_value,
-                                               &p_lbs->button_char_handles);
+                                               &p_acs->button_char_handles);
 }
 
-uint32_t ble_lbs_init(ble_lbs_t * p_lbs, const ble_lbs_init_t * p_lbs_init)
+uint32_t ble_acs_init(ble_acs_t * p_acs, const ble_acs_init_t * p_acs_init)
 {
     uint32_t   err_code;
     ble_uuid_t ble_uuid;
 
     // Initialize service structure.
-    p_lbs->conn_handle       = BLE_CONN_HANDLE_INVALID;
-    p_lbs->led_write_handler = p_lbs_init->led_write_handler;
+    p_acs->conn_handle       = BLE_CONN_HANDLE_INVALID;
+    p_acs->led_write_handler = p_acs_init->led_write_handler;
 
     // Add service.
-    ble_uuid128_t base_uuid = {LBS_UUID_BASE};
-    err_code = sd_ble_uuid_vs_add(&base_uuid, &p_lbs->uuid_type);
+    ble_uuid128_t base_uuid = {ACS_UUID_BASE};
+    err_code = sd_ble_uuid_vs_add(&base_uuid, &p_acs->uuid_type);
     VERIFY_SUCCESS(err_code);
 
-    ble_uuid.type = p_lbs->uuid_type;
-    ble_uuid.uuid = LBS_UUID_SERVICE;
+    ble_uuid.type = p_acs->uuid_type;
+    ble_uuid.uuid = ACS_UUID_SERVICE;
 
-    err_code = sd_ble_gatts_service_add(BLE_GATTS_SRVC_TYPE_PRIMARY, &ble_uuid, &p_lbs->service_handle);
+    err_code = sd_ble_gatts_service_add(BLE_GATTS_SRVC_TYPE_PRIMARY, &ble_uuid, &p_acs->service_handle);
     VERIFY_SUCCESS(err_code);
 
     // Add characteristics.
-    err_code = button_char_add(p_lbs, p_lbs_init);
+    err_code = button_char_add(p_acs, p_acs_init);
     VERIFY_SUCCESS(err_code);
 
-    err_code = led_char_add(p_lbs, p_lbs_init);
+    err_code = led_char_add(p_acs, p_acs_init);
     VERIFY_SUCCESS(err_code);
 
     return NRF_SUCCESS;
 }
 
-uint32_t ble_lbs_on_button_change(ble_lbs_t * p_lbs, uint8_t button_state)
+uint32_t ble_acs_on_button_change(ble_acs_t * p_acs, uint8_t button_state, uint8_t button_id)
 {
     ble_gatts_hvx_params_t params;
-    uint16_t len = sizeof(button_state);
+    uint16_t len = sizeof(uint8_t);
+
+    uint8_t data = ((button_state << 7) | button_id)
+
+    // |Bit 7 | Bit 6 - 0 |
+    // |On/Off|Which Button (0,1,2,3)|
 
     memset(&params, 0, sizeof(params));
     params.type = BLE_GATT_HVX_NOTIFICATION;
-    params.handle = p_lbs->button_char_handles.value_handle;
-    params.p_data = &button_state;
+    params.handle = p_acs->button_char_handles.value_handle;
+    params.p_data = &data;
     params.p_len = &len;
 
-    return sd_ble_gatts_hvx(p_lbs->conn_handle, &params);
+    return sd_ble_gatts_hvx(p_acs->conn_handle, &params);
 }
-#endif //BLE_LBS_ENABLED
+#endif //BLE_ACS_ENABLED

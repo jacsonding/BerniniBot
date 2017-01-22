@@ -46,7 +46,7 @@ extern "C" {
 #endif
 
 #define LBS_UUID_BASE        {0x23, 0xD1, 0xBC, 0xEA, 0x5F, 0x78, 0x23, 0x15, \
-                              0xDE, 0xEF, 0x12, 0x12, 0x00, 0x00, 0x00, 0x00}
+                              0xDE, 0xEF, 0x12, 0x12, 0x00, 0x00, 0x02, 0x3E}
 #define LBS_UUID_SERVICE     0x1523
 #define LBS_UUID_BUTTON_CHAR 0x1524
 #define LBS_UUID_LED_CHAR    0x1525
@@ -101,7 +101,7 @@ void ble_lbs_on_ble_evt(ble_lbs_t * p_lbs, ble_evt_t * p_ble_evt);
  *
  * @retval NRF_SUCCESS If the notification was sent successfully. Otherwise, an error code is returned.
  */
-uint32_t ble_lbs_on_button_change(ble_lbs_t * p_lbs, uint8_t button_state);
+uint32_t ble_lbs_on_button_change(ble_lbs_t * p_lbs, uint8_t button_state, uint8_t button_id);
 
 
 #ifdef __cplusplus
